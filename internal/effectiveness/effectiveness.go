@@ -114,8 +114,12 @@ func pokemonTypesForGeneration(p pokeapi.Pokemon, gen Generation) []string {
 		return extractPokemonTypeNames(p.Types)
 	}
 
+	requestedGen := generationNumber(gen)
+
 	for _, past := range p.PastTypes {
-		if past.Generation.Name == string(gen) {
+		pastGen := generationNumber(Generation(past.Generation.Name))
+
+		if requestedGen <= pastGen {
 			return extractPokemonTypeNames(past.Types)
 		}
 	}
