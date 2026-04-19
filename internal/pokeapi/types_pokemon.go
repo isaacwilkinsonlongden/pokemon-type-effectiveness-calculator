@@ -87,8 +87,20 @@ type Pokemon struct {
 			} `json:"stat"`
 		} `json:"stats"`
 	} `json:"past_stats"`
-	PastTypes []any `json:"past_types"`
-	Species   struct {
+	PastTypes []struct {
+		Generation struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"generation"`
+		Types []struct {
+			Slot int `json:"slot"`
+			Type struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"type"`
+		} `json:"types"`
+	} `json:"past_types"`
+	Species struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"species"`

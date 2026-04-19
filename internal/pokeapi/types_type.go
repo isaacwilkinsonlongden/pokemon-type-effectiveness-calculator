@@ -70,8 +70,14 @@ type Type struct {
 				Name string `json:"name"`
 				URL  string `json:"url"`
 			} `json:"half_damage_to"`
-			NoDamageFrom []any `json:"no_damage_from"`
-			NoDamageTo   []any `json:"no_damage_to"`
+			NoDamageFrom []struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"no_damage_from"`
+			NoDamageTo []struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"no_damage_to"`
 		} `json:"damage_relations"`
 		Generation struct {
 			Name string `json:"name"`

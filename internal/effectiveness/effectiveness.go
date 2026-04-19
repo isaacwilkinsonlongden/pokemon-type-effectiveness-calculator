@@ -8,6 +8,12 @@ type Result struct {
 	Multipliers map[string]float64
 }
 
+type DamageRelations struct {
+	DoubleDamageFrom []string
+	HalfDamageFrom   []string
+	NoDamageFrom     []string
+}
+
 func AllTypesForGeneration(gen Generation) []string {
 	switch gen {
 	case GenerationIII:
@@ -31,10 +37,7 @@ func Calculate(client pokeapi.Client, pokemonName string, gen Generation) (Resul
 		return Result{}, err
 	}
 
-	pokemonTypes := []string{}
-	for _, pokemonType := range pokemonResp.Types {
-		pokemonTypes = append(pokemonTypes, pokemonType.Type.Name)
-	}
+	pokemonTypes := pokemonTypesForGeneration(pokemonResp, gen)
 
 	multipliers := map[string]float64{}
 	for _, t := range AllTypesForGeneration(gen) {
@@ -47,16 +50,18 @@ func Calculate(client pokeapi.Client, pokemonName string, gen Generation) (Resul
 			return Result{}, err
 		}
 
-		for _, t := range typeResp.DamageRelations.DoubleDamageFrom {
-			multipliers[t.Name] *= 2
+		relations := damageRelationsForGeneration(typeResp, gen)
+
+		for _, typeName := range relations.DoubleDamageFrom {
+			multipliers[typeName] *= 2
 		}
 
-		for _, t := range typeResp.DamageRelations.HalfDamageFrom {
-			multipliers[t.Name] *= 0.5
+		for _, typeName := range relations.HalfDamageFrom {
+			multipliers[typeName] *= 0.5
 		}
 
-		for _, t := range typeResp.DamageRelations.NoDamageFrom {
-			multipliers[t.Name] *= 0
+		for _, typeName := range relations.NoDamageFrom {
+			multipliers[typeName] *= 0
 		}
 	}
 
@@ -65,4 +70,69 @@ func Calculate(client pokeapi.Client, pokemonName string, gen Generation) (Resul
 		Types:       pokemonTypes,
 		Multipliers: multipliers,
 	}, nil
+}
+
+func damageRelationsForGeneration(t pokeapi.Type, gen Generation) DamageRelations {
+	if gen == Current {
+		return currentDamageRelations(t)
+	}
+
+	for _, past := range t.PastDamageRelations {
+		if past.Generation.Name == string(gen) {
+			return DamageRelations{
+				DoubleDamageFrom: extractNames(past.DamageRelations.DoubleDamageFrom),
+				HalfDamageFrom:   extractNames(past.DamageRelations.HalfDamageFrom),
+				NoDamageFrom:     extractNames(past.DamageRelations.NoDamageFrom),
+			}
+		}
+	}
+
+	return currentDamageRelations(t)
+}
+
+func extractNames(items []struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}) []string {
+	names := make([]string, 0, len(items))
+	for _, item := range items {
+		names = append(names, item.Name)
+	}
+	return names
+}
+
+func currentDamageRelations(t pokeapi.Type) DamageRelations {
+	return DamageRelations{
+		DoubleDamageFrom: extractNames(t.DamageRelations.DoubleDamageFrom),
+		HalfDamageFrom:   extractNames(t.DamageRelations.HalfDamageFrom),
+		NoDamageFrom:     extractNames(t.DamageRelations.NoDamageFrom),
+	}
+}
+
+func pokemonTypesForGeneration(p pokeapi.Pokemon, gen Generation) []string {
+	if gen == Current {
+		return extractPokemonTypeNames(p.Types)
+	}
+
+	for _, past := range p.PastTypes {
+		if past.Generation.Name == string(gen) {
+			return extractPokemonTypeNames(past.Types)
+		}
+	}
+
+	return extractPokemonTypeNames(p.Types)
+}
+
+func extractPokemonTypeNames(types []struct {
+	Slot int `json:"slot"`
+	Type struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"type"`
+}) []string {
+	names := make([]string, 0, len(types))
+	for _, t := range types {
+		names = append(names, t.Type.Name)
+	}
+	return names
 }
