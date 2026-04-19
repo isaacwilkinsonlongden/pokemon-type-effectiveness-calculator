@@ -6,11 +6,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/isaacwilkinsonlongden/pokemon-weakness-calculator/internal/effectiveness"
 	"github.com/isaacwilkinsonlongden/pokemon-weakness-calculator/internal/pokeapi"
 )
 
 type config struct {
 	pokeapiClient pokeapi.Client
+	generation    effectiveness.Generation
 }
 
 func startRepl(cfg *config) {
