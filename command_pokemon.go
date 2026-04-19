@@ -16,10 +16,8 @@ func commandPokemon(cfg *config, words ...string) error {
 		pokemonTypes = append(pokemonTypes, pokemonType.Type.Name)
 	}
 
-	// attacking type -> multiplier against this pokemon
 	multipliers := map[string]float64{}
 
-	// initialize all types to neutral
 	allTypes := []string{
 		"normal", "fire", "water", "electric", "grass", "ice",
 		"fighting", "poison", "ground", "flying", "psychic",
@@ -51,19 +49,48 @@ func commandPokemon(cfg *config, words ...string) error {
 
 	fmt.Printf("Name: %s\n", pokemonResp.Name)
 	fmt.Printf("Types: %v\n", pokemonTypes)
-	fmt.Println("Weaknesses:")
+	printTypeEffectiveness("WEAKNESSES", multipliers)
+	printTypeEffectiveness("RESISTANCES", multipliers)
+	printTypeEffectiveness("IMMUNITIES", multipliers)
+	printTypeEffectiveness("NORMAL", multipliers)
+
+	return nil
+}
+
+func printTypeEffectiveness(damageType string, multipliers map[string]float64) {
+	fmt.Printf("%s:\n", damageType)
 
 	keys := make([]string, 0, len(multipliers))
-	for k, v := range multipliers {
-		if v > 1 {
-			keys = append(keys, k)
+	switch damageType {
+	case "WEAKNESSES":
+		for k, v := range multipliers {
+			if v > 1 {
+				keys = append(keys, k)
+			}
+		}
+	case "RESISTANCES":
+		for k, v := range multipliers {
+			if v < 1 && v > 0 {
+				keys = append(keys, k)
+			}
+		}
+	case "IMMUNITIES":
+		for k, v := range multipliers {
+			if v == 0 {
+				keys = append(keys, k)
+			}
+		}
+	case "NORMAL":
+		for k, v := range multipliers {
+			if v == 1 {
+				keys = append(keys, k)
+			}
 		}
 	}
 	sort.Strings(keys)
 
 	for _, k := range keys {
-		fmt.Printf("- %s (x%.1f)\n", k, multipliers[k])
+		fmt.Printf("- %s (x%.1f) ", k, multipliers[k])
 	}
-
-	return nil
+	fmt.Println()
 }
