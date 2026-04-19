@@ -53,15 +53,21 @@ func Calculate(client pokeapi.Client, pokemonName string, gen Generation) (Resul
 		relations := damageRelationsForGeneration(typeResp, gen)
 
 		for _, typeName := range relations.DoubleDamageFrom {
-			multipliers[typeName] *= 2
+			if _, ok := multipliers[typeName]; ok {
+				multipliers[typeName] *= 2
+			}
 		}
 
 		for _, typeName := range relations.HalfDamageFrom {
-			multipliers[typeName] *= 0.5
+			if _, ok := multipliers[typeName]; ok {
+				multipliers[typeName] *= 0.5
+			}
 		}
 
 		for _, typeName := range relations.NoDamageFrom {
-			multipliers[typeName] *= 0
+			if _, ok := multipliers[typeName]; ok {
+				multipliers[typeName] *= 0
+			}
 		}
 	}
 
